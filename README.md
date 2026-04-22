@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Reloop — Curated Secondhand Fashion Marketplace
 
 A premium, full-stack secondhand fashion marketplace built with Next.js 14, TypeScript, Tailwind CSS, and Supabase.
