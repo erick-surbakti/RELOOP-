@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import type { Profile, UserRole } from "@/types";
 
-export default function ProfilePage() {
+export default function SellerProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,26 +77,25 @@ export default function ProfilePage() {
   };
 
   if (loading) return (
-    <div className="pt-20 min-h-screen section-container py-12">
-      <div className="max-w-2xl mx-auto space-y-4">
+    <div className="pt-14 lg:pt-0 min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="space-y-4 w-full max-w-xl px-8">
         <div className="skeleton h-32 rounded-full w-32 mx-auto" />
-        {[1,2,3,4].map((i) => <div key={i} className="skeleton h-14 rounded" />)}
+        {[1,2,3].map((i) => <div key={i} className="skeleton h-14 rounded" />)}
       </div>
     </div>
   );
 
   return (
-    <div className="pt-16 lg:pt-20 min-h-screen bg-ivory-50">
-      <div className="section-container py-12">
-        <div className="max-w-2xl mx-auto">
+    <div className="pt-14 lg:pt-0 min-h-screen bg-stone-50">
+      <div className="p-6 lg:p-10">
+        <div className="max-w-2xl">
           <div className="mb-10">
-            <span className="text-xs tracking-widest uppercase text-stone-400 block mb-1">My</span>
-            <h1 className="font-display text-4xl text-stone-900 font-light">Profile</h1>
+            <p className="text-stone-400 text-xs tracking-widest uppercase mb-1">Seller Studio</p>
+            <h1 className="font-display text-3xl text-stone-900 font-light">Profile & Switch Mode</h1>
           </div>
 
           {/* ── ROLE SWITCHER ── */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-stone-100 p-6 mb-5">
+          <div className="bg-white border border-stone-100 p-6 mb-5">
             <p className="text-xs tracking-widest uppercase text-stone-400 mb-4">Account Mode</p>
             <div className="grid grid-cols-2 gap-3">
               {([
@@ -129,28 +128,26 @@ export default function ProfilePage() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-stone-400 mt-3">Switching mode akan redirect ke dashboard yang sesuai.</p>
-          </motion.div>
+            <p className="text-[11px] text-stone-400 mt-3">Switching ke Buyer Mode akan redirect ke homepage buyer.</p>
+          </div>
 
           {/* ── PROFILE FORM ── */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-white border border-stone-100 p-8">
-            {/* Avatar */}
+          <div className="bg-white border border-stone-100 p-8">
             <div className="flex justify-center mb-10">
               <div className="relative">
-                <div className="w-28 h-28 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center">
                   {profile?.avatar_url
                     ? <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
-                    : <User className="w-10 h-10 text-stone-300" />}
+                    : <User className="w-9 h-9 text-stone-300" />}
                   {uploadingAvatar && (
                     <div className="absolute inset-0 bg-stone-900/50 flex items-center justify-center rounded-full">
-                      <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     </div>
                   )}
                 </div>
                 <button onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-9 h-9 bg-stone-900 text-ivory-100 rounded-full flex items-center justify-center hover:bg-stone-700 transition-colors shadow-elegant">
-                  <Camera className="w-4 h-4" />
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-stone-900 text-ivory-100 rounded-full flex items-center justify-center hover:bg-stone-700 transition-colors">
+                  <Camera className="w-3.5 h-3.5" />
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               </div>
@@ -159,9 +156,9 @@ export default function ProfilePage() {
             <div className="space-y-5">
               {[
                 { label: "Full Name", key: "full_name", placeholder: "Your full name", type: "text" },
-                { label: "Phone Number", key: "phone", placeholder: "+62 xxx xxxx xxxx", type: "tel" },
+                { label: "Phone", key: "phone", placeholder: "+62 xxx xxxx xxxx", type: "tel" },
                 { label: "Address", key: "address", placeholder: "Street address", type: "text" },
-                { label: "City / Regency", key: "city", placeholder: "Jakarta, Bandung, etc.", type: "text" },
+                { label: "City", key: "city", placeholder: "Jakarta, Bandung, etc.", type: "text" },
               ].map(({ label, key, placeholder, type }) => (
                 <div key={key}>
                   <label className="block text-xs tracking-widest uppercase text-stone-400 mb-2">{label}</label>
@@ -170,26 +167,17 @@ export default function ProfilePage() {
                     placeholder={placeholder} className="input-elegant" />
                 </div>
               ))}
-
               <div>
                 <label className="block text-xs tracking-widest uppercase text-stone-400 mb-2">Email</label>
                 <input type="email" value={profile?.email || ""} disabled
                   className="input-elegant opacity-50 cursor-not-allowed bg-stone-50" />
               </div>
-
-              <div className="pt-2">
-                <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
-                  {saving
-                    ? <span className="w-4 h-4 border-2 border-ivory-300/40 border-t-ivory-300 rounded-full animate-spin" />
-                    : <><Save className="w-4 h-4" /> Save Changes</>}
-                </button>
-              </div>
+              <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
+                {saving
+                  ? <span className="w-4 h-4 border-2 border-ivory-300/40 border-t-ivory-300 rounded-full animate-spin" />
+                  : <><Save className="w-4 h-4" /> Save Changes</>}
+              </button>
             </div>
-          </motion.div>
-
-          <div className="mt-4 flex items-center gap-2 text-stone-400 text-xs">
-            <span className="bg-stone-100 text-stone-600 px-3 py-1 text-[11px] tracking-widest uppercase">{profile?.role}</span>
-            <span>account · {profile?.email}</span>
           </div>
         </div>
       </div>

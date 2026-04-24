@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, PlusSquare, Package, ShoppingBag,
-  LogOut, Menu, X, Truck, User
+  LogOut, Menu, X, User, Settings
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/seller/add-product", icon: PlusSquare, label: "Add Product" },
   { href: "/seller/manage-products", icon: Package, label: "My Products" },
   { href: "/seller/orders", icon: ShoppingBag, label: "Orders" },
+  { href: "/seller/profile", icon: Settings, label: "Profile & Switch" },
 ];
 
 export default function SellerSidebar() {
@@ -62,13 +63,6 @@ export default function SellerSidebar() {
 
       {/* Bottom */}
       <div className="p-4 border-t border-stone-800 space-y-1">
-        <Link
-          href="/buyer/homepage"
-          className="flex items-center gap-3 px-4 py-3 text-sm text-stone-500 hover:text-stone-300 transition-colors tracking-wide"
-        >
-          <User className="w-4 h-4" />
-          Buyer View
-        </Link>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-500 hover:text-stone-300 transition-colors tracking-wide"
@@ -100,23 +94,17 @@ export default function SellerSidebar() {
         {mobileOpen && (
           <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 z-40"
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "tween", duration: 0.3 }}
               className="fixed top-0 left-0 bottom-0 w-64 bg-stone-950 z-50"
             >
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 text-stone-500 hover:text-stone-300"
-              >
+              <button onClick={() => setMobileOpen(false)}
+                className="absolute top-4 right-4 text-stone-500 hover:text-stone-300">
                 <X className="w-5 h-5" />
               </button>
               <SidebarContent />

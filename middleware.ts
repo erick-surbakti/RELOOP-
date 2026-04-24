@@ -5,7 +5,8 @@ export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const pathname = request.nextUrl.pathname;
-  // Never auth-gate API routes (chatbot expects JSON, not HTML redirects).
+
+  // Never gate API routes
   if (pathname.startsWith("/api/")) {
     return supabaseResponse;
   }
@@ -15,13 +16,9 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
+        getAll() { return request.cookies.getAll(); },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -33,22 +30,15 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const publicPaths = ["/auth/login", "/auth/signup", "/"];
-  const isPublic = publicPaths.some((p) => pathname === p) ||
-    pathname.startsWith("/buyer/product/");
+  const publicPaths = ["/", "/auth/login", "/auth/signup"];
+  const isPublic = publicPaths.includes(pathname) || pathname.startsWith("/buyer/product/");
 
-  if (user && publicPaths.includes(pathname)) {
-    let redirectTo = "/buyer/homepage";
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profile?.role === "seller") redirectTo = "/seller/dashboard";
-
-    return NextResponse.redirect(new URL(redirectTo, request.url));
+  // Logged in → jangan bisa akses auth pages lagi
+  if (user && (pathname === "/auth/login" || pathname === "/auth/signup")) {
+    return NextResponse.redirect(new URL("/buyer/homepage", request.url));
   }
 
+  // Tidak login → redirect ke login
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
