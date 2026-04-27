@@ -3,9 +3,9 @@ import Chatbot from "@/components/Chatbot";
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-stone-950 flex">
+    <div style={{ minHeight: "100vh", display: "flex", background: "#F5F3EF" }}>
       <SellerSidebar />
-      <main className="flex-1 ml-0 lg:ml-64 min-h-screen bg-stone-50">
+      <main style={{ flex: 1, marginLeft: 0 }} className="lg:ml-[240px]">
         {children}
       </main>
       <Chatbot />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Heart, ShoppingBag, User, X, Menu, LogOut } from "lucide-react";
+import { Search, Heart, ShoppingBag, User, X, Menu, LogOut, ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
@@ -13,199 +13,211 @@ export default function BuyerNavbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
+  const isHome = pathname === "/buyer/homepage";
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   useEffect(() => {
-    const fetchCounts = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+    const fetch = async () => {
+      const s = createClient();
+      const { data: { user } } = await s.auth.getUser();
       if (!user) return;
-
-      const { data: cart } = await supabase
-        .from("carts")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
+      const { data: cart } = await s.from("carts").select("id").eq("user_id", user.id).single();
       if (cart) {
-        const { count } = await supabase
-          .from("cart_items")
-          .select("*", { count: "exact" })
-          .eq("cart_id", cart.id);
+        const { count } = await s.from("cart_items").select("*", { count: "exact" }).eq("cart_id", cart.id);
         setCartCount(count || 0);
       }
-
-      const { count: wCount } = await supabase
-        .from("wishlists")
-        .select("*", { count: "exact" })
-        .eq("user_id", user.id);
-      setWishlistCount(wCount || 0);
+      const { count: wc } = await s.from("wishlists").select("*", { count: "exact" }).eq("user_id", user.id);
+      setWishlistCount(wc || 0);
     };
-
-    fetchCounts();
-
-    // Listen for custom events to update counts
-    const handler = () => fetchCounts();
-    window.addEventListener("cartUpdated", handler);
-    window.addEventListener("wishlistUpdated", handler);
-    return () => {
-      window.removeEventListener("cartUpdated", handler);
-      window.removeEventListener("wishlistUpdated", handler);
-    };
+    fetch();
+    window.addEventListener("cartUpdated", fetch);
+    window.addEventListener("wishlistUpdated", fetch);
+    return () => { window.removeEventListener("cartUpdated", fetch); window.removeEventListener("wishlistUpdated", fetch); };
   }, [pathname]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    toast.success("Signed out successfully");
+    await createClient().auth.signOut();
+    toast.success("Signed out");
     router.push("/auth/login");
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/buyer/homepage?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
   };
 
   const navLinks = [
     { href: "/buyer/homepage", label: "Shop" },
     { href: "/buyer/wishlist", label: "Wishlist" },
-    { href: "/buyer/orders", label: "My Orders" },
+    { href: "/buyer/orders", label: "Orders" },
   ];
+
+  const textColor = !scrolled && isHome ? "text-white/90" : "text-stone-700";
+  const hoverColor = !scrolled && isHome ? "hover:text-white" : "hover:text-stone-950";
 
   return (
     <>
       <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? "glass border-b border-stone-200/60 shadow-elegant" : "bg-transparent"
-        }`}
+        initial={{ y: -64, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-700 ${scrolled ? "glass" : "bg-transparent"}`}
       >
-        <div className="section-container">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
-            <Link href="/buyer/homepage">
-              <span className="font-display text-xl tracking-[0.3em] text-stone-900 uppercase hover:text-stone-700 transition-colors">
-                Reloop
-              </span>
+        <div className="section-container flex items-center justify-between h-16 lg:h-[72px]">
+
+          {/* Logo */}
+          <Link href="/buyer/homepage">
+            <span className={`font-display text-[22px] tracking-[0.4em] uppercase transition-colors duration-500 ${!scrolled && isHome ? "text-white" : "text-stone-950"}`}>
+              Reloop
+            </span>
+          </Link>
+
+          {/* Desktop links */}
+          <div className="hidden lg:flex items-center gap-10">
+            {navLinks.map((l) => (
+              <Link key={l.href} href={l.href}
+                className={`text-[11px] tracking-[0.22em] uppercase transition-all duration-300 hover-underline ${
+                  pathname === l.href
+                    ? (!scrolled && isHome ? "text-white" : "text-stone-950")
+                    : `${textColor} ${hoverColor}`
+                }`}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Icons */}
+          <div className="flex items-center">
+            {[
+              { icon: Search, onClick: () => setSearchOpen(true), label: "Search" },
+            ].map(({ icon: Icon, onClick, label }) => (
+              <button key={label} onClick={onClick}
+                className={`p-3 transition-colors duration-300 ${textColor} ${hoverColor}`}>
+                <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              </button>
+            ))}
+
+            <Link href="/buyer/wishlist"
+              className={`relative p-3 transition-colors duration-300 ${textColor} ${hoverColor}`}>
+              <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              {wishlistCount > 0 && (
+                <span className="absolute top-2.5 right-2 w-3.5 h-3.5 bg-stone-950 text-white text-[8px] flex items-center justify-center rounded-full font-medium">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
-            {/* Desktop Nav Links */}
-            <div className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-xs tracking-widest uppercase transition-colors duration-300 ${
-                    pathname === link.href
-                      ? "text-stone-900 font-medium"
-                      : "text-stone-500 hover:text-stone-900"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            <Link href="/buyer/cart"
+              className={`relative p-3 transition-colors duration-300 ${textColor} ${hoverColor}`}>
+              <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              {cartCount > 0 && (
+                <span className="absolute top-2.5 right-2 w-3.5 h-3.5 bg-stone-950 text-white text-[8px] flex items-center justify-center rounded-full font-medium">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
-            {/* Icons */}
-            <div className="flex items-center gap-1 lg:gap-2">
-              <Link
-                href="/buyer/wishlist"
-                className="relative p-2.5 text-stone-600 hover:text-stone-900 transition-colors group"
-              >
-                <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                {wishlistCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-warm-500 text-white text-[10px] flex items-center justify-center rounded-full font-medium">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
+            <Link href="/buyer/profile"
+              className={`p-3 transition-colors duration-300 ${textColor} ${hoverColor}`}>
+              <User className="w-[18px] h-[18px]" strokeWidth={1.5} />
+            </Link>
 
-              <Link
-                href="/buyer/cart"
-                className="relative p-2.5 text-stone-600 hover:text-stone-900 transition-colors group"
-              >
-                <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-stone-800 text-white text-[10px] flex items-center justify-center rounded-full font-medium">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+            <button onClick={handleLogout}
+              className={`hidden lg:flex p-3 transition-colors duration-300 ${!scrolled && isHome ? "text-white/50 hover:text-white" : "text-stone-400 hover:text-stone-700"}`}>
+              <LogOut className="w-[16px] h-[16px]" strokeWidth={1.5} />
+            </button>
 
-              <Link
-                href="/buyer/profile"
-                className="p-2.5 text-stone-600 hover:text-stone-900 transition-colors group"
-              >
-                <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="hidden lg:flex p-2.5 text-stone-400 hover:text-stone-900 transition-colors"
-                title="Sign out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-
-              {/* Mobile menu */}
-              <button
-                onClick={() => setMobileOpen(true)}
-                className="lg:hidden p-2.5 text-stone-600"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
+            <button onClick={() => setMobileOpen(true)}
+              className={`lg:hidden p-3 transition-colors duration-300 ${textColor}`}>
+              <Menu className="w-[18px] h-[18px]" strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </motion.nav>
 
-      {/* Mobile Drawer */}
+      {/* Search overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[60] bg-stone-950/80 backdrop-blur-sm flex flex-col items-center justify-center px-6"
+            onClick={(e) => { if (e.target === e.currentTarget) setSearchOpen(false); }}
+          >
+            <motion.div
+              initial={{ y: -30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-2xl"
+            >
+              <p className="text-white/40 text-[10px] tracking-[0.3em] uppercase mb-6">Search</p>
+              <form onSubmit={handleSearch} className="relative border-b border-white/20">
+                <input autoFocus type="text" value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pieces, brands, categories..."
+                  className="w-full bg-transparent text-white text-3xl font-display font-light pb-4 pr-12 outline-none placeholder:text-white/25"
+                />
+                <button type="submit"
+                  className="absolute right-0 bottom-4 text-white/40 hover:text-white transition-colors">
+                  <ArrowUpRight className="w-7 h-7" strokeWidth={1} />
+                </button>
+              </form>
+              <button onClick={() => setSearchOpen(false)}
+                className="mt-8 text-white/30 hover:text-white/70 text-[10px] tracking-[0.3em] uppercase transition-colors flex items-center gap-2">
+                <X className="w-3.5 h-3.5" /> Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-50"
+              onClick={() => setMobileOpen(false)} />
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-stone-950/40 z-50 lg:hidden"
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed top-0 right-0 bottom-0 w-72 bg-ivory-50 z-50 flex flex-col p-6"
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed top-0 right-0 bottom-0 w-72 bg-[#F7F5F0] z-50 flex flex-col"
             >
-              <div className="flex items-center justify-between mb-10">
-                <span className="font-display text-xl tracking-[0.3em] text-stone-900 uppercase">Reloop</span>
-                <button onClick={() => setMobileOpen(false)}>
-                  <X className="w-5 h-5 text-stone-600" />
+              <div className="flex items-center justify-between px-7 py-6 border-b border-black/6">
+                <span className="font-display text-lg tracking-[0.35em] uppercase text-stone-950">Menu</span>
+                <button onClick={() => setMobileOpen(false)} className="text-stone-400 hover:text-stone-800 transition-colors">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               </div>
-              <div className="flex flex-col gap-6">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="text-stone-700 text-sm tracking-widest uppercase hover:text-stone-900 transition-colors"
-                  >
-                    {link.label}
+              <nav className="flex flex-col p-7 gap-7 flex-1">
+                {navLinks.map((l) => (
+                  <Link key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
+                    className="text-stone-600 text-sm tracking-[0.22em] uppercase hover:text-stone-950 transition-colors hover-underline">
+                    {l.label}
                   </Link>
                 ))}
-              </div>
-              <div className="mt-auto border-t border-stone-200 pt-6">
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-stone-500 text-sm hover:text-stone-900 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
+              </nav>
+              <div className="p-7 border-t border-black/6">
+                <button onClick={handleLogout}
+                  className="flex items-center gap-2.5 text-stone-400 text-sm hover:text-stone-800 transition-colors tracking-wider">
+                  <LogOut className="w-4 h-4" strokeWidth={1.5} /> Sign Out
                 </button>
               </div>
             </motion.div>

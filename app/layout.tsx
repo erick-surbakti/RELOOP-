@@ -7,34 +7,28 @@ export const metadata: Metadata = {
   description: "Discover premium secondhand fashion. Buy and sell curated pieces from trusted sellers.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="bg-ivory-100 text-stone-800 antialiased">
+      <body className="antialiased">
         {children}
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
             style: {
-              background: "#2A2520",
-              color: "#F9F7F2",
+              background: "#1C1917",
+              color: "#FAFAF8",
               borderRadius: "0",
-              padding: "12px 16px",
-              fontSize: "13px",
-              letterSpacing: "0.02em",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+              padding: "14px 18px",
+              fontSize: "12px",
+              letterSpacing: "0.05em",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontWeight: "300",
             },
-            success: {
-              iconTheme: { primary: "#5A7852", secondary: "#F9F7F2" },
-            },
-            error: {
-              iconTheme: { primary: "#B45309", secondary: "#F9F7F2" },
-            },
+            success: { iconTheme: { primary: "#6B7C6E", secondary: "#FAFAF8" } },
+            error: { iconTheme: { primary: "#B45309", secondary: "#FAFAF8" } },
           }}
         />
       </body>
