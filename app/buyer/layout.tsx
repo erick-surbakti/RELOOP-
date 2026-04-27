@@ -3,7 +3,7 @@ import Chatbot from "@/components/Chatbot";
 
 export default function BuyerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-ivory-100">
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <BuyerNavbar />
       <main>{children}</main>
       <Chatbot />

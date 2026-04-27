@@ -4,57 +4,59 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  LayoutDashboard, PlusSquare, Package, ShoppingBag,
-  LogOut, Menu, X, User, Settings
-} from "lucide-react";
+import { LayoutDashboard, PlusSquare, Package, ShoppingBag, Settings, LogOut, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
-const navItems = [
-  { href: "/seller/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/seller/add-product", icon: PlusSquare, label: "Add Product" },
-  { href: "/seller/manage-products", icon: Package, label: "My Products" },
-  { href: "/seller/orders", icon: ShoppingBag, label: "Orders" },
-  { href: "/seller/profile", icon: Settings, label: "Profile & Switch" },
+const NAV = [
+  { href: "/seller/dashboard",         icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/seller/add-product",       icon: PlusSquare,      label: "Add Product" },
+  { href: "/seller/manage-products",   icon: Package,         label: "My Products" },
+  { href: "/seller/orders",            icon: ShoppingBag,     label: "Orders" },
+  { href: "/seller/profile",           icon: Settings,        label: "Profile & Switch" },
 ];
 
-export default function SellerSidebar() {
+function SidebarInner({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await createClient().auth.signOut();
     toast.success("Signed out");
     router.push("/auth/login");
   };
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0E0C0A" }}>
       {/* Logo */}
-      <div className="p-6 border-b border-stone-800">
-        <span className="font-display text-xl tracking-[0.3em] text-ivory-100 uppercase">Reloop</span>
-        <div className="mt-1 text-xs tracking-widest uppercase text-stone-500">Seller Studio</div>
+      <div style={{ padding: "28px 28px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <span className="font-display" style={{ fontSize: "1.4rem", letterSpacing: "0.35em", textTransform: "uppercase", color: "rgba(247,245,240,0.9)" }}>
+          Reloop
+        </span>
+        <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#3A3530", marginTop: 4, fontFamily: "var(--font-body)" }}>
+          Seller Studio
+        </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ href, icon: Icon, label }) => {
+      <nav style={{ flex: 1, padding: "16px 12px" }}>
+        {NAV.map(({ href, icon: Icon, label }) => {
           const active = pathname === href;
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 text-sm tracking-wide transition-all duration-200 ${
-                active
-                  ? "bg-stone-800 text-ivory-100"
-                  : "text-stone-400 hover:text-ivory-200 hover:bg-stone-800/50"
-              }`}
+            <Link key={href} href={href} onClick={onClose}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "11px 16px",
+                marginBottom: 2, fontSize: 12, letterSpacing: "0.12em",
+                color: active ? "rgba(247,245,240,0.9)" : "#4A4540",
+                background: active ? "rgba(255,255,255,0.07)" : "transparent",
+                textDecoration: "none", transition: "all 0.25s ease",
+                borderLeft: active ? "2px solid #C4A882" : "2px solid transparent",
+                fontFamily: "var(--font-body)", fontWeight: 300,
+              }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(247,245,240,0.7)"; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "#4A4540"; }}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
               {label}
             </Link>
           );
@@ -62,52 +64,58 @@ export default function SellerSidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="p-4 border-t border-stone-800 space-y-1">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-500 hover:text-stone-300 transition-colors tracking-wide"
+      <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <button onClick={handleLogout}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", width: "100%", background: "none", border: "none", cursor: "pointer", fontSize: 12, letterSpacing: "0.12em", color: "#2E2A26", fontFamily: "var(--font-body)", fontWeight: 300, transition: "color 0.25s ease" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#4A4540")}
+          onMouseLeave={e => (e.currentTarget.style.color = "#2E2A26")}
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-4 h-4" strokeWidth={1.5} />
           Sign Out
         </button>
       </div>
     </div>
   );
+}
+
+export default function SellerSidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-64 bg-stone-950 flex-col z-30">
-        <SidebarContent />
+      {/* Desktop */}
+      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 flex-col z-30" style={{ width: 240, background: "#0E0C0A" }}>
+        <SidebarInner />
       </aside>
 
-      {/* Mobile Top Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-stone-950 border-b border-stone-800 px-4 py-3 flex items-center justify-between">
-        <span className="font-display text-lg tracking-[0.3em] text-ivory-100 uppercase">Reloop</span>
-        <button onClick={() => setMobileOpen(true)} className="text-stone-400">
-          <Menu className="w-5 h-5" />
+      {/* Mobile topbar */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between px-5 py-4"
+        style={{ background: "#0E0C0A", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <span className="font-display" style={{ fontSize: "1.2rem", letterSpacing: "0.35em", textTransform: "uppercase", color: "rgba(247,245,240,0.9)" }}>
+          Reloop
+        </span>
+        <button onClick={() => setMobileOpen(true)} style={{ color: "#4A4540", background: "none", border: "none", cursor: "pointer" }}>
+          <Menu className="w-5 h-5" strokeWidth={1.5} />
         </button>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40"
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-            />
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 40 }} />
             <motion.aside
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed top-0 left-0 bottom-0 w-64 bg-stone-950 z-50"
+              transition={{ type: "tween", duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+              style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, zIndex: 50 }}
             >
               <button onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 text-stone-500 hover:text-stone-300">
-                <X className="w-5 h-5" />
+                style={{ position: "absolute", top: 16, right: 16, color: "#4A4540", background: "none", border: "none", cursor: "pointer", zIndex: 1 }}>
+                <X className="w-5 h-5" strokeWidth={1.5} />
               </button>
-              <SidebarContent />
+              <SidebarInner onClose={() => setMobileOpen(false)} />
             </motion.aside>
           </>
         )}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, ArrowLeft, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
@@ -12,139 +12,122 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg("");
-    setLoading(true);
-    const supabase = createClient();
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        setErrorMsg("Email atau password salah. Coba lagi.");
-      } else if (error.message.includes("Email not confirmed")) {
-        setErrorMsg('Email belum dikonfirmasi. Buka Supabase → Authentication → Settings → matikan "Enable email confirmations".');
-      } else {
-        setErrorMsg(error.message);
-      }
-      setLoading(false);
-      return;
+    setError(""); setLoading(true);
+    const s = createClient();
+    const { data, error: err } = await s.auth.signInWithPassword({ email, password });
+    if (err) {
+      if (err.message.includes("Invalid login credentials")) setError("Email atau password salah.");
+      else if (err.message.includes("Email not confirmed")) setError('Disable "Enable email confirmations" di Supabase → Auth → Settings.');
+      else setError(err.message);
+      setLoading(false); return;
     }
-
-    if (!data.user) {
-      setErrorMsg("Login gagal. Cek .env.local kamu.");
-      setLoading(false);
-      return;
-    }
-
-    // Fetch role
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles").select("role").eq("id", data.user.id).single();
-
-    if (profileError || !profile) {
-      // Profile belum ada — buat dari metadata auth
+    if (!data.user) { setError("Login gagal."); setLoading(false); return; }
+    const { data: profile } = await s.from("profiles").select("role").eq("id", data.user.id).single();
+    if (!profile) {
       const meta = data.user.user_metadata;
-      await supabase.from("profiles").upsert({
-        id: data.user.id,
-        full_name: meta?.full_name || "User",
-        email: data.user.email || email,
-        role: meta?.role || "buyer",
-        updated_at: new Date().toISOString(),
-      });
-      const role = meta?.role || "buyer";
-      toast.success("Welcome back!");
-      router.push(role === "seller" ? "/seller/dashboard" : "/buyer/homepage");
+      await s.from("profiles").upsert({ id: data.user.id, full_name: meta?.full_name || "User", email: data.user.email || email, role: meta?.role || "buyer", updated_at: new Date().toISOString() });
+      router.push(meta?.role === "seller" ? "/seller/dashboard" : "/buyer/homepage");
     } else {
-      toast.success("Welcome back!");
       router.push(profile.role === "seller" ? "/seller/dashboard" : "/buyer/homepage");
     }
-
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left — Image */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&q=80')` }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/30 to-stone-950/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/60 to-transparent" />
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+    <div style={{ minHeight: "100vh", display: "flex", background: "var(--bg)" }}>
+
+      {/* Left Image */}
+      <div className="hidden lg:block relative overflow-hidden" style={{ width: "58%" }}>
+        <img
+          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1400&q=85"
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ transition: "transform 12s ease" }}
+        />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(10,8,5,0.25) 0%, rgba(10,8,5,0.6) 100%)" }} />
+        <div className="absolute inset-0 flex flex-col justify-between p-14">
           <Link href="/" className="flex items-center gap-3 group w-fit">
-            <ArrowLeft className="w-4 h-4 text-ivory-200 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-display text-2xl tracking-[0.3em] text-ivory-100 uppercase">Reloop</span>
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" style={{ color: "rgba(255,255,255,0.5)" }} strokeWidth={1.5} />
+            <span className="font-display text-xl tracking-[0.4em] uppercase" style={{ color: "rgba(255,255,255,0.9)" }}>Reloop</span>
           </Link>
-          <div>
-            <blockquote className="font-display text-3xl text-ivory-100 font-light italic leading-relaxed mb-4">
+          <div style={{ maxWidth: 380 }}>
+            <blockquote className="font-display font-light italic" style={{ fontSize: "clamp(1.5rem,3vw,2.25rem)", color: "rgba(255,255,255,0.88)", lineHeight: 1.35, marginBottom: 20 }}>
               "Fashion is the armor to survive everyday life."
             </blockquote>
-            <cite className="text-ivory-400 text-sm tracking-widest not-italic">— Bill Cunningham</cite>
+            <cite style={{ fontSize: 11, letterSpacing: "0.22em", color: "rgba(255,255,255,0.4)", fontStyle: "normal", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>
+              — Bill Cunningham
+            </cite>
           </div>
         </div>
       </div>
 
-      {/* Right — Form */}
-      <div className="w-full lg:w-[45%] bg-ivory-50 flex items-center justify-center px-6 py-16">
+      {/* Right Form */}
+      <div className="flex items-center justify-center px-8 py-16" style={{ flex: 1 }}>
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          style={{ width: "100%", maxWidth: 360 }}
         >
           <div className="lg:hidden mb-12">
-            <Link href="/" className="font-display text-2xl tracking-[0.3em] text-stone-900 uppercase">Reloop</Link>
+            <Link href="/" className="font-display text-xl tracking-[0.4em] uppercase" style={{ color: "var(--text)" }}>Reloop</Link>
           </div>
 
-          <div className="mb-10">
-            <h1 className="font-display text-4xl text-stone-900 font-light mb-2">Welcome back</h1>
-            <p className="text-stone-500 text-sm">Sign in to continue your fashion journey.</p>
+          <div style={{ marginBottom: 40 }}>
+            <h1 className="font-display font-light" style={{ fontSize: "2.75rem", color: "var(--text)", lineHeight: 1.1, marginBottom: 10 }}>
+              Welcome back
+            </h1>
+            <p style={{ color: "var(--text-3)", fontSize: 14, fontWeight: 300 }}>
+              Sign in to continue your fashion journey.
+            </p>
           </div>
 
-          {errorMsg && (
+          {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-5 p-4 bg-red-50 border border-red-200 flex gap-3">
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-red-700 text-xs leading-relaxed">{errorMsg}</p>
+              style={{ marginBottom: 28, padding: "14px 16px", background: "#FEF2F2", borderLeft: "2px solid #F87171", display: "flex", gap: 10 }}>
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#EF4444" }} />
+              <p style={{ color: "#991B1B", fontSize: 12, fontWeight: 300, lineHeight: 1.6 }}>{error}</p>
             </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 28 }}>
             <div>
-              <label className="block text-xs tracking-widest uppercase text-stone-500 mb-2">Email Address</label>
+              <label style={{ display: "block", fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 12, fontFamily: "var(--font-body)" }}>
+                Email
+              </label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com" required className="input-elegant" />
             </div>
             <div>
-              <label className="block text-xs tracking-widest uppercase text-stone-500 mb-2">Password</label>
-              <div className="relative">
-                <input type={showPassword ? "text" : "password"} value={password}
-                  onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
-                  required className="input-elegant pr-12" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <label style={{ display: "block", fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 12, fontFamily: "var(--font-body)" }}>
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" required className="input-elegant" style={{ paddingRight: 36 }} />
+                <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)", cursor: "pointer", background: "none", border: "none" }}>
+                  {showPw ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
-              {loading
-                ? <span className="inline-block w-4 h-4 border-2 border-ivory-300/30 border-t-ivory-300 rounded-full animate-spin" />
-                : "Sign In"}
+            <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 8 }}>
+              {loading ? <span className="inline-block w-4 h-4 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,255,255,0.25)", borderTopColor: "white" }} /> : "Sign In"}
             </button>
           </form>
 
-          <div className="divider-text my-8"><span>or</span></div>
+          <div className="divider-text" style={{ margin: "32px 0" }}><span>or</span></div>
 
-          <p className="text-center text-sm text-stone-500">
-            Belum punya akun?{" "}
-            <Link href="/auth/signup" className="text-stone-900 font-medium hover:underline underline-offset-4">Daftar sekarang</Link>
+          <p style={{ textAlign: "center", fontSize: 14, color: "var(--text-3)", fontWeight: 300 }}>
+            New to Reloop?{" "}
+            <Link href="/auth/signup" className="hover-underline" style={{ color: "var(--text)", fontWeight: 400 }}>
+              Create account
+            </Link>
           </p>
         </motion.div>
       </div>
