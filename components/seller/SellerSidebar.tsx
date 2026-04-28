@@ -59,6 +59,20 @@ export default function SellerSidebar() {
             </Link>
           );
         })}
+        
+        <Link
+          href="/profile"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 px-4 py-3 text-sm tracking-wide transition-all duration-200 ${
+            pathname === "/profile"
+              ? "bg-stone-800 text-ivory-100"
+              : "text-stone-400 hover:text-ivory-200 hover:bg-stone-800/50"
+          }`}
+        >
+          <User className="w-4 h-4 flex-shrink-0" />
+          Profile & Settings
+        </Link>
+
         <button
           onClick={() => {
             setMobileOpen(false);
@@ -77,7 +91,7 @@ export default function SellerSidebar() {
           href="/buyer/homepage"
           className="flex items-center gap-3 px-4 py-3 text-sm text-stone-500 hover:text-stone-300 transition-colors tracking-wide"
         >
-          <User className="w-4 h-4" />
+          <ShoppingBag className="w-4 h-4" />
           Buyer View
         </Link>
         <button

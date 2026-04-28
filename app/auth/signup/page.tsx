@@ -15,13 +15,13 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<UserRole>("buyer");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const supabase = createClient();
+    const role = "buyer"; // Default role
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -52,11 +52,7 @@ export default function SignupPage() {
       }
 
       toast.success("Account created! Welcome to Reloop.");
-      if (role === "seller") {
-        router.push("/seller/dashboard");
-      } else {
-        router.push("/buyer/homepage");
-      }
+      router.push("/buyer/homepage");
     }
     setLoading(false);
   };
@@ -88,34 +84,6 @@ export default function SignupPage() {
             <p className="text-stone-500 text-sm">
               Create your account and start your fashion journey.
             </p>
-          </div>
-
-          {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-xs tracking-widest uppercase text-stone-500 mb-3">
-              I want to
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "buyer" as UserRole, label: "Shop & Buy", icon: ShoppingBag, desc: "Discover curated fashion" },
-                { value: "seller" as UserRole, label: "Sell Items", icon: Store, desc: "List your pre-loved pieces" },
-              ].map(({ value, label, icon: Icon, desc }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRole(value)}
-                  className={`relative p-4 text-left border transition-all duration-300 ${
-                    role === value
-                      ? "border-stone-800 bg-stone-900 text-ivory-100"
-                      : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 mb-2 ${role === value ? "text-warm-300" : "text-stone-400"}`} />
-                  <div className="font-medium text-sm">{label}</div>
-                  <div className={`text-xs mt-0.5 ${role === value ? "text-stone-400" : "text-stone-400"}`}>{desc}</div>
-                </button>
-              ))}
-            </div>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
@@ -179,7 +147,7 @@ export default function SignupPage() {
               {loading ? (
                 <span className="inline-block w-4 h-4 border-2 border-ivory-300/30 border-t-ivory-300 rounded-full animate-spin" />
               ) : (
-                `Create ${role === "buyer" ? "Buyer" : "Seller"} Account`
+                `Create Account`
               )}
             </button>
           </form>

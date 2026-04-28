@@ -137,7 +137,7 @@ export default function BuyerNavbar() {
               </Link>
 
               <Link
-                href="/buyer/profile"
+                href="/profile"
                 className="p-2.5 text-stone-600 hover:text-stone-900 transition-colors group"
               >
                 <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
