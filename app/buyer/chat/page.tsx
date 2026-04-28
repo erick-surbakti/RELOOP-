@@ -259,11 +259,3 @@ export default function ChatPage() {
     </Suspense>
   );
 }
-
-function ChatContent() {
-  return (
-    <Suspense fallback={<div className="pt-24 text-center">Loading chat...</div>}>
-      <ChatContent />
-    </Suspense>
-  );
-}
