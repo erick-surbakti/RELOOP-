@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Package, ChevronDown, ChevronUp, Clock, MapPin, Navigation } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Order } from "@/types";
 import Footer from "@/components/shared/Footer";
@@ -30,6 +30,64 @@ const statusColors: Record<string, string> = {
   on_the_way: "bg-sage-100 text-sage-600",
   delivered: "bg-sage-100 text-sage-600",
 };
+
+function MapTracker({ status }: { status: string }) {
+  if (status !== "on_the_way" && status !== "sent" && status !== "delivered") return null;
+
+  return (
+    <div className="relative w-full h-48 bg-stone-100 overflow-hidden border border-stone-200 mt-4">
+      {/* Fake Map Grid */}
+      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+      
+      {/* Road */}
+      <div className="absolute top-1/2 left-0 right-0 h-1 bg-stone-200 -translate-y-1/2" />
+      <div className="absolute top-1/2 left-0 right-0 h-1 border-t border-dashed border-stone-400 -translate-y-1/2" />
+
+      {/* Destination */}
+      <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center">
+        <MapPin className="w-6 h-6 text-stone-800 fill-stone-800" />
+        <span className="text-[9px] font-bold uppercase tracking-tighter mt-1">Home</span>
+      </div>
+
+      {/* Origin */}
+      <div className="absolute left-10 top-1/2 -translate-y-1/2 flex flex-col items-center opacity-40">
+        <div className="w-3 h-3 rounded-full bg-stone-400" />
+        <span className="text-[9px] font-bold uppercase tracking-tighter mt-1">Seller</span>
+      </div>
+
+      {/* Motorcycle Animation */}
+      {status === "on_the_way" && (
+        <motion.div
+          animate={{ x: [0, 200, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute left-16 top-1/2 -translate-y-1/2 z-10"
+        >
+          <div className="relative">
+            <Navigation className="w-5 h-5 text-warm-600 rotate-90 fill-warm-600" />
+            <motion.div 
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="absolute -left-2 top-0 w-1 h-5 bg-warm-200 blur-sm" 
+            />
+          </div>
+          <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-warm-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shadow-lg">
+            Courier
+          </span>
+        </motion.div>
+      )}
+
+      {status === "delivered" && (
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+           <Navigation className="w-5 h-5 text-sage-600 rotate-90 fill-sage-600" />
+        </div>
+      )}
+
+      <div className="absolute bottom-3 left-4 bg-white/80 backdrop-blur-sm px-2 py-1 border border-stone-200">
+        <p className="text-[10px] font-bold text-stone-800 tracking-widest uppercase">Live Tracking</p>
+      </div>
+    </div>
+  );
+}
 
 function OrderTracker({ status }: { status: string }) {
   const currentIdx = STATUS_INDEX[status] ?? 0;
@@ -77,7 +135,7 @@ function OrderCard({ order }: { order: Order }) {
   return (
     <motion.div
       layout
-      className="bg-white border border-stone-100 overflow-hidden"
+      className="bg-white border border-stone-100 overflow-hidden shadow-sm"
     >
       {/* Header */}
       <div
@@ -89,7 +147,7 @@ function OrderCard({ order }: { order: Order }) {
             <Package className="w-5 h-5 text-stone-500" />
           </div>
           <div>
-            <p className="text-xs text-stone-400 tracking-wider mb-0.5">
+            <p className="text-xs text-stone-400 tracking-wider mb-0.5 uppercase">
               Order #{order.id.slice(0, 8).toUpperCase()}
             </p>
             <p className="font-display text-lg text-stone-900">
@@ -114,54 +172,66 @@ function OrderCard({ order }: { order: Order }) {
             initial={{ height: 0 }}
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
-            transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
             <div className="border-t border-stone-100 px-5 pb-5 pt-4 space-y-5">
-              {/* Tracking */}
+              {/* Status Tracker */}
               <div>
-                <h3 className="text-xs tracking-widest uppercase text-stone-400 mb-4">Order Tracking</h3>
+                <h3 className="text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-4">Order Progress</h3>
                 <OrderTracker status={order.status} />
               </div>
 
-              {/* Items */}
-              {order.order_items && order.order_items.length > 0 && (
-                <div>
-                  <h3 className="text-xs tracking-widest uppercase text-stone-400 mb-3">Items</h3>
-                  <div className="space-y-3">
-                    {order.order_items.map((item) => (
-                      <div key={item.id} className="flex gap-3 items-center">
-                        <div className="w-14 h-16 relative bg-stone-100 overflow-hidden flex-shrink-0">
-                          <Image
-                            src={item.product?.image_url || "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=100&q=60"}
-                            alt={item.product?.name || ""}
-                            fill
-                            className="object-cover"
-                            sizes="56px"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-stone-800 line-clamp-1">{item.product?.name}</p>
-                          <p className="text-xs text-stone-400 mt-0.5">Qty: {item.quantity} · Size: {item.product?.size}</p>
-                          <p className="text-sm text-stone-700 mt-1">Rp {item.price_at_purchase.toLocaleString("id-ID")}</p>
-                        </div>
-                      </div>
-                    ))}
+              {/* Map Tracker */}
+              <MapTracker status={order.status} />
+
+              {/* Order Info Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-stone-50 p-4 border border-stone-100">
+                  <h3 className="text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-2">Shipping Details</h3>
+                  <p className="text-sm font-medium text-stone-800 uppercase">{order.expedition || 'Standard'} Express</p>
+                  <p className="text-xs text-stone-500 mt-1">{order.shipping_address}</p>
+                  <p className="text-xs text-stone-500">{order.shipping_city}</p>
+                </div>
+                <div className="bg-stone-50 p-4 border border-stone-100">
+                  <h3 className="text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-2">Payment Info</h3>
+                  <p className="text-sm font-medium text-stone-800 uppercase">{order.payment_method}</p>
+                  <p className="text-xs text-stone-500 mt-1">Transaction ID: {order.id.slice(-6).toUpperCase()}</p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+                    <span className="text-[10px] font-bold text-sage-600 uppercase tracking-wider">Payment Verified</span>
                   </div>
                 </div>
-              )}
-
-              {/* Shipping info */}
-              <div className="bg-stone-50 p-4">
-                <h3 className="text-xs tracking-widest uppercase text-stone-400 mb-2">Shipping To</h3>
-                <p className="text-sm text-stone-700">{order.shipping_address}</p>
-                <p className="text-sm text-stone-700">{order.shipping_city}</p>
               </div>
 
-              {/* Date */}
-              <div className="flex items-center gap-2 text-stone-400 text-xs">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Ordered {new Date(order.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+              {/* Items */}
+              <div>
+                <h3 className="text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-3">Purchased Items</h3>
+                <div className="space-y-3">
+                  {order.order_items?.map((item) => (
+                    <div key={item.id} className="flex gap-3 items-center">
+                      <div className="w-12 h-14 relative bg-stone-100 flex-shrink-0">
+                        <Image src={item.product?.image_url || ""} alt="" fill className="object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-stone-800 line-clamp-1">{item.product?.name}</p>
+                        <p className="text-[10px] text-stone-400 uppercase tracking-widest">{item.product?.brand} · Qty {item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-display text-stone-900">Rp {item.price_at_purchase.toLocaleString("id-ID")}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-stone-50">
+                <div className="flex items-center gap-2 text-stone-400 text-[10px] font-bold uppercase tracking-widest">
+                  <Clock className="w-3 h-3" />
+                  <span>Placed {new Date(order.created_at).toLocaleDateString("id-ID")}</span>
+                </div>
+                {order.status === "on_the_way" && (
+                  <button className="text-[10px] font-bold text-warm-600 uppercase tracking-widest border border-warm-200 px-3 py-1 hover:bg-warm-50 transition-colors">
+                    Contact Courier
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -175,25 +245,25 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchOrders = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("orders")
+      .select("*, order_items(*, product:products(*))")
+      .eq("buyer_id", user.id)
+      .order("created_at", { ascending: false });
+    setOrders(data || []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("orders")
-        .select("*, order_items(*, product:products(*))")
-        .eq("buyer_id", user.id)
-        .order("created_at", { ascending: false });
-      setOrders(data || []);
-      setLoading(false);
-    };
     fetchOrders();
 
-    // Real-time updates
     const supabase = createClient();
     const channel = supabase
-      .channel("orders-realtime")
+      .channel("orders-realtime-buyer")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => {
         fetchOrders();
       })
@@ -206,22 +276,19 @@ export default function MyOrdersPage() {
     <div className="pt-16 lg:pt-20 min-h-screen bg-ivory-50">
       <div className="section-container py-12">
         <div className="mb-10">
-          <span className="text-xs tracking-widest uppercase text-stone-400 block mb-1">My</span>
-          <h1 className="font-display text-4xl text-stone-900 font-light">Orders</h1>
+          <span className="text-xs tracking-widest uppercase text-stone-400 block mb-1">Account</span>
+          <h1 className="font-display text-4xl text-stone-900 font-light">My Orders</h1>
         </div>
 
         {loading ? (
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 rounded" />)}
           </div>
         ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-5">
-              <Package className="w-7 h-7 text-stone-300" />
-            </div>
-            <h3 className="font-display text-2xl text-stone-700 font-light mb-2">No orders yet</h3>
-            <p className="text-stone-400 text-sm mb-8">Start shopping to see your orders here.</p>
-            <Link href="/buyer/homepage" className="btn-primary">Browse Collection</Link>
+            <Package className="w-12 h-12 text-stone-200 mb-4" />
+            <p className="text-stone-400 text-sm mb-8 tracking-widest uppercase">No orders found</p>
+            <Link href="/buyer/homepage" className="btn-primary">Start Shopping</Link>
           </div>
         ) : (
           <div className="max-w-3xl space-y-4">

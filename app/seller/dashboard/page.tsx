@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Package, ShoppingBag, TrendingUp, Eye, PlusSquare, ArrowRight, Clock } from "lucide-react";
+import { Package, ShoppingBag, TrendingUp, Eye, PlusSquare, ArrowRight, Clock, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, Order, Product } from "@/types";
 
@@ -61,6 +61,13 @@ export default function SellerDashboard() {
     { label: "Total Products", value: stats.products, icon: Package, color: "bg-stone-100 text-stone-600" },
     { label: "Total Orders", value: stats.orders, icon: ShoppingBag, color: "bg-warm-100 text-warm-600" },
     { label: "Revenue (IDR)", value: `Rp ${stats.revenue.toLocaleString("id-ID")}`, icon: TrendingUp, color: "bg-sage-100 text-sage-600" },
+    { 
+      label: "AI Assistant", 
+      value: "Ask Me", 
+      icon: MessageCircle, 
+      color: "bg-ivory-100 text-stone-600",
+      onClick: () => window.dispatchEvent(new CustomEvent("open-chatbot"))
+    },
   ];
 
   return (
@@ -78,21 +85,31 @@ export default function SellerDashboard() {
               {profile?.full_name || "Seller"}
             </h1>
           </div>
-          <Link href="/seller/add-product" className="btn-primary flex items-center gap-2 text-xs">
-            <PlusSquare className="w-4 h-4" />
-            Add Product
-          </Link>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
+              className="hidden sm:flex items-center gap-2 text-xs tracking-widest uppercase text-stone-500 hover:text-stone-900 transition-colors border border-stone-200 px-4 py-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Assistant
+            </button>
+            <Link href="/seller/add-product" className="btn-primary flex items-center gap-2 text-xs">
+              <PlusSquare className="w-4 h-4" />
+              Add Product
+            </Link>
+          </div>
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          {statCards.map(({ label, value, icon: Icon, color }, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {statCards.map(({ label, value, icon: Icon, color, onClick }, i) => (
             <motion.div
               key={label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white border border-stone-100 p-6 shadow-elegant"
+              onClick={onClick}
+              className={`bg-white border border-stone-100 p-6 shadow-elegant ${onClick ? "cursor-pointer hover:border-stone-300 transition-colors" : ""}`}
             >
               <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center mb-4`}>
                 <Icon className="w-5 h-5" />

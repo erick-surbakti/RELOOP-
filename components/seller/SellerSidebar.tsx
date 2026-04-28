@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, PlusSquare, Package, ShoppingBag,
-  LogOut, Menu, X, Truck, User
+  LogOut, Menu, X, Truck, User, MessageCircle
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/seller/add-product", icon: PlusSquare, label: "Add Product" },
   { href: "/seller/manage-products", icon: Package, label: "My Products" },
   { href: "/seller/orders", icon: ShoppingBag, label: "Orders" },
+  { href: "/seller/chat", icon: MessageCircle, label: "Messages" },
 ];
 
 export default function SellerSidebar() {
@@ -58,6 +59,16 @@ export default function SellerSidebar() {
             </Link>
           );
         })}
+        <button
+          onClick={() => {
+            setMobileOpen(false);
+            window.dispatchEvent(new CustomEvent("open-chatbot"));
+          }}
+          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-stone-400 hover:text-ivory-200 hover:bg-stone-800/50 transition-all duration-200 tracking-wide"
+        >
+          <MessageCircle className="w-4 h-4 flex-shrink-0" />
+          AI Assistant
+        </button>
       </nav>
 
       {/* Bottom */}

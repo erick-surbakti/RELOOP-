@@ -112,6 +112,8 @@ CREATE TABLE IF NOT EXISTS orders (
   shipping_address TEXT NOT NULL,
   shipping_city TEXT NOT NULL,
   payment_method TEXT NOT NULL DEFAULT 'cod',
+  expedition TEXT,
+  tracking_number TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -177,6 +179,27 @@ CREATE POLICY "Users can delete own product images" ON storage.objects FOR DELET
 
 ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE order_items;
+
+-- ============================================
+-- MESSAGES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  receiver_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own messages" ON messages FOR SELECT
+  USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+CREATE POLICY "Users can insert their own messages" ON messages FOR INSERT
+  WITH CHECK (auth.uid() = sender_id);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
 
 -- ============================================
 -- SEED DATA (Optional — for demo/testing)

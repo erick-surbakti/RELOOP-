@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 
 type ChatMessage = {
@@ -21,6 +21,12 @@ export default function Chatbot() {
   ]);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener("open-chatbot", handleOpen);
+    return () => window.removeEventListener("open-chatbot", handleOpen);
+  }, []);
 
   const canSend = useMemo(() => input.trim().length > 0 && !busy, [input, busy]);
 
@@ -77,7 +83,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-32 lg:bottom-6 right-6 z-[100]">
       {!open ? (
         <button
           type="button"

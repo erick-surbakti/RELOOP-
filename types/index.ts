@@ -81,7 +81,9 @@ export interface Order {
   total_price: number;
   shipping_address: string;
   shipping_city: string;
-  payment_method: "cod";
+  payment_method: "cod" | "qris" | "mastercard";
+  expedition?: string;
+  tracking_number?: string;
   created_at: string;
   updated_at: string;
   buyer?: Profile;
@@ -105,4 +107,14 @@ export interface ProductFilters {
   size?: string;
   condition?: ProductCondition | "";
   sortBy?: "newest" | "price_asc" | "price_desc";
+}
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  sender?: Profile;
+  receiver?: Profile;
 }

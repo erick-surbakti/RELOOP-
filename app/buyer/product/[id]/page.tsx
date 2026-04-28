@@ -236,22 +236,30 @@ export default function ProductDetailPage() {
             {product.seller && (
               <div className="mt-8 pt-6 border-t border-stone-100">
                 <span className="text-[11px] tracking-widest uppercase text-stone-400 block mb-3">Seller</span>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center overflow-hidden">
-                    {product.seller.avatar_url ? (
-                      <Image src={product.seller.avatar_url} alt={product.seller.full_name} width={40} height={40} className="object-cover" />
-                    ) : (
-                      <span className="text-sm font-medium text-stone-600">
-                        {product.seller.full_name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center overflow-hidden">
+                      {product.seller.avatar_url ? (
+                        <Image src={product.seller.avatar_url} alt={product.seller.full_name} width={40} height={40} className="object-cover" />
+                      ) : (
+                        <span className="text-sm font-medium text-stone-600">
+                          {product.seller.full_name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-stone-800">{product.seller.full_name}</p>
+                      {product.seller.city && (
+                        <p className="text-xs text-stone-400">{product.seller.city}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-stone-800">{product.seller.full_name}</p>
-                    {product.seller.city && (
-                      <p className="text-xs text-stone-400">{product.seller.city}</p>
-                    )}
-                  </div>
+                  <Link 
+                    href={`/buyer/chat?sellerId=${product.seller.id}`}
+                    className="px-4 py-2 text-xs font-medium tracking-widest uppercase border border-stone-200 text-stone-600 hover:border-stone-800 hover:text-stone-900 transition-colors"
+                  >
+                    Chat Seller
+                  </Link>
                 </div>
               </div>
             )}

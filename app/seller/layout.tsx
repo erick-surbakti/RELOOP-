@@ -1,4 +1,5 @@
 import SellerSidebar from "@/components/seller/SellerSidebar";
+import Chatbot from "@/components/Chatbot";
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
       <main className="flex-1 ml-0 lg:ml-64 min-h-screen bg-stone-50">
         {children}
       </main>
+      <Chatbot />
     </div>
   );
 }
