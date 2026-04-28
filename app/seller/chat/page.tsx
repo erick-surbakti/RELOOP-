@@ -1,14 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { Send, User, ChevronLeft, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Message, Profile } from "@/types";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
-export default function SellerChatPage() {
+function SellerChatContent() {
   const searchParams = useSearchParams();
   const buyerId = searchParams.get("buyerId");
   
@@ -242,5 +242,13 @@ export default function SellerChatPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SellerChatPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+      <SellerChatContent />
+    </Suspense>
   );
 }
